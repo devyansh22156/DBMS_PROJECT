@@ -46,13 +46,13 @@ def login():
 
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM customers WHERE Email = %s AND Password = %s", (email, password))
+        cursor.execute("SELECT * FROM customer WHERE email = %s AND password = %s", (email, password))
         user = cursor.fetchone()
         cursor.close()
         conn.close()
 
         if user:
-            return f"Welcome, {user['FullName']}!"
+            return render_template('customer_profile.html', user=user)
         else:
             return "Invalid email or password"
 
