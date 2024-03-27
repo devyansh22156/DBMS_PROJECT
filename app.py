@@ -26,13 +26,13 @@ def signup():
         address3 = request.form['address3']
         password = request.form['password']
 
-        conn = mysql.connector.connect(**db_config)
-        cursor = conn.cursor()
+        connect = mysql.connector.connect(**db_config)
+        cursor = connect.cursor()
         cursor.execute("INSERT INTO customer (CustomerID, FullName, Email, ContactDetails, AddressLine1, AddressLine2, AddressLine3, Password) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                     (customerid, fullname, email, contact, address1, address2, address3, password))
-        conn.commit()
+        connect.commit()
         cursor.close()
-        conn.close()
+        connect.close()
         return redirect(url_for('index'))
 
 @app.route('/login.html', methods=['POST'])
