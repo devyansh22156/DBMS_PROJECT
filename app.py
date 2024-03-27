@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for
 import mysql.connector
+import datetime
 
 app = Flask(__name__)
 
@@ -17,15 +18,17 @@ def index():
 @app.route('/signup.html', methods=['POST'])
 def signup():
     if request.method == 'POST':
-        customerid = request.form['customerid']
+        #customerid = request.form['customerid']
         fullname = request.form['fullname']
         email = request.form['email']
-        contact = int(request.form['contact'])
+        contact = request.form['contact']
         address1 = request.form['address1']
         address2 = request.form['address2']
         address3 = request.form['address3']
         password = request.form['password']
-
+        customerid = str(datetime.date.today().year) + fullname.split()[0] + contact[5:10]
+        print(customerid)
+        contact = int(contact)
         connect = mysql.connector.connect(**db_config)
         cursor = connect.cursor()
         cursor.execute("INSERT INTO customer (CustomerID, FullName, Email, ContactDetails, AddressLine1, AddressLine2, AddressLine3, Password) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
