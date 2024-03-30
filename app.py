@@ -4,6 +4,9 @@ import datetime
 
 app = Flask(__name__)
 
+# Change these settings with your own machine specs
+# Also don't forget to copy-paste and run dbQueryDump in default console before running the program
+
 db_config = {
     'host': 'localhost',
     'user': 'root',
@@ -11,11 +14,9 @@ db_config = {
     'database': 'kads'
 }
 
-
 @app.route('/')
 def index():
     return render_template('home.html')
-
 
 @app.route('/signup.html', methods=['POST', 'GET'])
 def signup():
