@@ -47,27 +47,28 @@ def signup():
     else:
         return render_template('/signup.html')
 
-def fetch_user_data(user_id):
-    connect = mysql.connector.connect(**db_config)
-    cursor = connect.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM customer WHERE CustomerID = %s", (user_id,))
-    user = cursor.fetchone()
-    cursor.close()
-    connect.close()
-    return user
-
 @app.route('/customerHome.html')
 def customerHome():
     return render_template('customerHome.html')
 
 @app.route('/customer_profile.html')
 def customer_profile():
-    # Retrieve the user_id from the URL
     user_id_str = request.args.get('user_id')
-    # Parse the user_id string into a dictionary
     user_id = ast.literal_eval(user_id_str)
-    # Render the template with the user_id dictionary
     return render_template('customer_profile.html', user=user_id)
+
+@app.route('/get_products.html')
+def getProductOnWeb():
+    connect = mysql.connector.connect(**db_config)
+    cursor = connect.cursor()
+    cursor.execute(
+        "SELECT * FROM PRODUCT"
+    )
+    inventory = cursor.fetchall()
+    cursor.close()
+    connect.close()
+    return render_template('get_products.html', inventory=inventory)
+
 @app.route('/login.html', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -82,8 +83,6 @@ def login():
         cursor.close()
         connect.close()
         if user:
-            # Need to insert Main Home page Here
-            # return render_template('/customer_profile.html', user=user)
             return render_template('/customerHome.html', user=user)
         else:
             return "Invalid email or password"
