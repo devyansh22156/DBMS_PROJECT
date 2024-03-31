@@ -63,9 +63,9 @@
             <tbody>
                 {% for product in inventory %}
                 <tr>
-                    <td>{{ product[1] }}</td> <!-- Name -->
-                    <td>{{ product[2] }}</td> <!-- Description -->
-                    <td>${{ product[3] }}</td> <!-- Price -->
+                    <td>{{ product[1] }}</td>
+                    <td>{{ product[2] }}</td>
+                    <td>${{ product[3] }}</td>
                     <td><button class="add-to-cart-btn">Add to Cart</button></td> <!-- Add to Cart button -->
                 </tr>
                 {% endfor %}

@@ -1,0 +1,33 @@
+Use kads;
+
+CREATE TABLE LoginAttempts (
+    AttemptID INT AUTO_INCREMENT PRIMARY KEY,
+    CustomerID VARCHAR(20),
+    AttemptTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Success BOOLEAN,
+    FOREIGN KEY (CustomerID) REFERENCES CUSTOMER(CustomerID)
+);
+
+ALTER TABLE CUSTOMER
+ADD COLUMN AccountLockedUntil DATETIME NULL;
+
+DELIMITER //
+CREATE TRIGGER AfterFailedLogin
+AFTER INSERT ON LoginAttempts
+FOR EACH ROW
+BEGIN
+    DECLARE failedAttempts INT;
+
+    SELECT COUNT(*) INTO failedAttempts
+    FROM LoginAttempts
+    WHERE CustomerID = NEW.CustomerID
+      AND AttemptTime > NOW() - INTERVAL 10 MINUTE
+      AND Success = FALSE;
+
+    IF failedAttempts > 3 THEN
+        UPDATE CUSTOMER
+        SET AccountLockedUntil = NOW() + INTERVAL 2 MINUTE
+        WHERE CustomerID = NEW.CustomerID;
+    END IF;
+END //
+DELIMITER ;

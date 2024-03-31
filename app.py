@@ -51,6 +51,11 @@ def signup():
 def customerHome():
     return render_template('customerHome.html')
 
+@app.route('/getCustomerOrders.html')
+def customerOders():
+    # Not executed yet
+    return render_template('/getCustomerOrder.html')
+
 @app.route('/customer_profile.html')
 def customer_profile():
     user_id_str = request.args.get('user_id')
@@ -69,6 +74,27 @@ def getProductOnWeb():
     connect.close()
     return render_template('get_products.html', inventory=inventory)
 
+# @app.route('/login.html', methods=['GET', 'POST'])
+# def login():
+#     if request.method == 'POST':
+#         email = request.form.get('email')
+#         password = request.form.get('password')
+#         if not email or not password:
+#             return "Email and password are required."
+#         connect = mysql.connector.connect(**db_config)
+#         cursor = connect.cursor(dictionary=True)
+#         cursor.execute("SELECT * FROM customer WHERE Email = %s AND Password = %s", (email, password))
+#         user = cursor.fetchone()
+#         cursor.close()
+#         connect.close()
+#         if user:
+#             return render_template('/customerHome.html', user=user)
+#         else:
+#             return "Invalid email or password"
+#     else:
+#         return render_template('login.html')
+
+
 @app.route('/login.html', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -78,16 +104,41 @@ def login():
             return "Email and password are required."
         connect = mysql.connector.connect(**db_config)
         cursor = connect.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM customer WHERE Email = %s AND Password = %s", (email, password))
+        cursor.execute("SELECT AccountLockedUntil FROM customer WHERE Email = %s", (email,))
+        account_info = cursor.fetchone()
+        if account_info and account_info['AccountLockedUntil']:
+            remaining_lockout_time = account_info['AccountLockedUntil'] - datetime.datetime.now()
+            if remaining_lockout_time.total_seconds() > 0:
+                remaining_minutes = remaining_lockout_time.seconds // 60
+                remaining_seconds = remaining_lockout_time.seconds % 60
+                lockout_message = f"Your account is locked. Please try again in {remaining_minutes} minutes and {remaining_seconds} seconds."
+                return render_template('/profileLock.html', lockout_message=lockout_message)
+                # Need to add one html page here
+
+        cursor.execute("SELECT * FROM customer WHERE Email = %s", (email,))
         user = cursor.fetchone()
-        cursor.close()
-        connect.close()
-        if user:
+        if user and user['Password'] == password:
+            cursor.execute(
+                "INSERT INTO LoginAttempts (CustomerID, Success) VALUES (%s, TRUE)",
+                (user['CustomerID'],)
+            )
+            connect.commit()
+            cursor.close()
+            connect.close()
             return render_template('/customerHome.html', user=user)
         else:
-            return "Invalid email or password"
+            if user:
+                cursor.execute(
+                    "INSERT INTO LoginAttempts (CustomerID, Success) VALUES (%s, FALSE)",
+                    (user['CustomerID'],)
+                )
+                connect.commit()
+            cursor.close()
+            connect.close()
+            return render_template('/invalidEmailPass.html')
     else:
         return render_template('login.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
