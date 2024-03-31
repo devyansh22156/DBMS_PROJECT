@@ -36,3 +36,20 @@ ALTER TABLE CUSTOMER
 ADD COLUMN SecurityQuestion VARCHAR(255),
 ADD COLUMN SecurityAnswer VARCHAR(255);
 
+DELIMITER //
+
+CREATE TRIGGER decrement_stock_after_add_to_cart
+AFTER INSERT ON cart_items
+FOR EACH ROW
+BEGIN
+    -- Update the stock of the product in the products table
+    UPDATE products
+    SET stock = stock - 1
+    WHERE product_id = NEW.product_id;
+END;
+//
+
+DELIMITER ;
+
+
+

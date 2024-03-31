@@ -74,3 +74,40 @@
     </div>
 </body>
 </html>
+
+{#<!-- Products table -->#}
+{#<table>#}
+{#    <thead>#}
+{#        <tr>#}
+{#            <th>Name</th>#}
+{#            <th>Description</th>#}
+{#            <th>Price</th>#}
+{#            <th>Action</th>#}
+{#        </tr>#}
+{#    </thead>#}
+{#    <tbody>#}
+{#        {% for product in inventory  %}#}
+{#        <tr>#}
+{#            <td>{{ product[1] }}</td>#}
+{#            <td>{{ product[2] }}</td>#}
+{#            <td>${{ product[3] }}</td>#}
+{#            <td>#}
+{#               <form id="add_to_cart_form_{{ product[0] }}" action="{{ url_for('add_to_cart', product_id=product[0], customer_id=user.CustomerID) }}" method="post">#}
+{#                   <button type="submit" onclick="changeButtonColor({{ product[0] }})">Add to Cart</button>#}
+{#               </form>#}
+{##}
+{#            </td>#}
+{#        </tr>#}
+{#        {% endfor %}#}
+{#    </tbody>#}
+{#</table>#}
+{##}
+{#<script>#}
+{#    function changeButtonColor(productId) {#}
+{#        var formId = "add_to_cart_form_" + productId;#}
+{#        var button = document.getElementById(formId).querySelector('button');#}
+{#        button.style.backgroundColor = 'green';#}
+{#        button.innerHTML = 'Added';#}
+{#    }#}
+{#</script>#}
+
