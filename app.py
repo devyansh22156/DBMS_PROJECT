@@ -11,6 +11,8 @@ app = Flask(__name__)
 # Also don't forget to copy-paste and run dbQueryDump in default console before running the program
 
 db_config = {
+
+
     'host': 'localhost',
     'user': 'root',
     'password': 'dev123',
