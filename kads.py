@@ -1,5 +1,5 @@
 import mysql.connector
-import datetime
+from datetime import datetime
 
 DB_CONFIG = {
     'host': 'localhost',
@@ -7,7 +7,7 @@ DB_CONFIG = {
     'password': 'dev123',
     'database': 'kads'
 }
-
+orderId = 2234
 class Customer:
     def __init__(self, customer_id, full_name, email, contact_details, address_line1,
                  address_line2=None, address_line3=None, password=None):
@@ -27,8 +27,9 @@ def fetch_customer_by_email_password(email, password):
         query = "SELECT CustomerID, FullName, Email, ContactDetails, AddressLine1, AddressLine2, AddressLine3, Password FROM customer WHERE Email = %s AND Password = %s"
         cursor.execute(query, (email, password))
         customer_data = cursor.fetchone()
+        print(customer_data)
         if customer_data:
-            return Customer(*customer_data)
+            return customer_data[0]
         else:
             print("Invalid email or password!")
             return None
@@ -54,17 +55,60 @@ def display_products():
         if 'connection' in locals() or 'connection' in globals():
             connection.close()
 
+
+def create_order(customerID):
+    connection = mysql.connector.connect(**DB_CONFIG)
+    cursor = connection.cursor()
+
+    try:
+        cursor.execute("START TRANSACTION")
+
+        # Lock the rows in the product table
+        cursor.execute("SELECT * FROM  CART")
+        items = cursor.fetchall()
+
+        for item in items:
+            productId = item[0]
+            quantity = item[1]
+            price = 500
+
+            cursor.execute("SELECT MAX(SUBSTRING(OrderID, 2)) FROM ORDERS")
+            last_order_id = cursor.fetchone()[0]
+            if last_order_id:
+                new_order_id = str(int(last_order_id) + 1).zfill(3)
+            else:
+                new_order_id = '001'
+
+            current_time = datetime.now()
+            order_time = current_time.strftime('%H:%M:%S')
+            order_date = current_time.strftime('%Y-%m-%d')
+
+            query = "INSERT INTO ORDERS (OrderID, OrderDetail, CustomerID, Status, PaymentMethod, OrderTime, OrderDate, OrderAmount, Quantity) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            cursor.execute(query, (
+            new_order_id, productId, customerID, "pending", "card", order_time, order_date, price, quantity))
+            # Reduce product's stock
+            cursor.execute("UPDATE PRODUCT SET Stock = Stock - %s WHERE ProductID = %s", (quantity, productId))
+
+        cursor.execute("COMMIT")
+
+    except Exception as e:
+        print("An error occurred:", e)
+        cursor.execute("ROLLBACK")
+
+    finally:
+        cursor.close()
+        connection.close()
+
 def buy_gadgets(customer_id):
     while True:
         display_products()
         product_id = input("Enter product ID: ")
         quantity = int(input("Enter quantity: "))
-
         # Add product to cart and calculate cost
         add_to_cart(product_id, customer_id, quantity)
-
         choice = input("Press 'C' to continue shopping or 'X' to checkout: ")
         if choice.upper() == 'X':
+            create_order(customer_id)
             break
 
 def add_to_cart(product_id, customer_id, quantity):
@@ -81,12 +125,20 @@ def add_to_cart(product_id, customer_id, quantity):
         if 'connection' in locals() or 'connection' in globals():
             connection.close()
 
+def delete_cart_table():
+    connect = mysql.connector.connect(**DB_CONFIG)
+    cursor = connect.cursor()
+    cursor.execute("DROP TABLE IF EXISTS CART")
+    connect.commit()
+    cursor.close()
+    connect.close()
+
 def main():
     while True:
         print("\n1. SignUp")
         print("2. LogIn")
         print("3. Exit")
-
+        delete_cart_table()
         choice = input("Enter your choice: ")
         if choice == '1':
             full_name = input("Enter full name: ")
@@ -101,19 +153,33 @@ def main():
         elif choice == '2':
             email = input("Enter Email: ")
             password = input("Enter password: ")
-            logged_in_customer = fetch_customer_by_email_password(email, password)
-            if logged_in_customer:
+            customerId = fetch_customer_by_email_password(email, password)
+            if customerId:
                 print("Logged in successfully!")
                 while True:
+                    connection = mysql.connector.connect(**DB_CONFIG)
+                    cursor = connection.cursor()
+                    cursor.execute(
+                        """
+                            CREATE TABLE IF NOT EXISTS cart (
+                                ProductID VARCHAR(60) NOT NULL,
+                                Quantity BIGINT NOT NULL,
+                                CustomerID VARCHAR(20) NOT NULL,
+                                FOREIGN KEY (ProductID) REFERENCES PRODUCT(ProductID),
+                                FOREIGN KEY (CustomerID) REFERENCES CUSTOMER(CustomerID)
+                            )
+                            """
+                    )
+                    connection.commit()
+                    cursor.close()
                     print("\n1. Buy Gadgets")
                     print("2. Display Profile")
                     print("3. Logout")
                     choice = input("Enter your choice: ")
-
                     if choice == '1':
-                        buy_gadgets(logged_in_customer.customer_id)
+                        buy_gadgets(customerId)
                     elif choice == '2':
-                        print(logged_in_customer.__dict__)  # Print customer object attributes
+                        print(customerId)
                     elif choice == '3':
                         break
                     else:
