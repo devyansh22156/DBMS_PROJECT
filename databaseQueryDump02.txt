@@ -51,7 +51,7 @@ END;
 
 DELIMITER ;
 
-[1:35 pm, 19/4/2024] Anish Jain IIITD: DELIMITER $$
+till here
 
 CREATE TRIGGER BeforePasswordUpdate
 BEFORE UPDATE ON customer
