@@ -51,5 +51,38 @@ END;
 
 DELIMITER ;
 
+[1:35 pm, 19/4/2024] Anish Jain IIITD: DELIMITER $$
 
+CREATE TRIGGER BeforePasswordUpdate
+BEFORE UPDATE ON customer
+FOR EACH ROW
+BEGIN
+    IF LENGTH(NEW.password) < 8 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Password must be at least 8 characters long.';
+    END IF;
+END$$
+
+DELIMITER ;
+CREATE TRIGGER AfterPasswordUpdate
+AFTER UPDATE ON customer
+FOR EACH ROW
+BEGIN
+    IF OLD.password <> NEW.password THEN
+        INSERT INTO password_change_log(customer_id, old_password, change_time)
+        VALUES (NEW.customer_id, OLD.password, NOW());
+    END IF;
+END$$
+
+DELIMITER ;
+CREATE TRIGGER AfterPasswordUpdate
+AFTER UPDATE ON customer
+FOR EACH ROW
+BEGIN
+    IF OLD.password <> NEW.password THEN
+        INSERT INTO password_change_log(customer_id, old_password, change_time)
+        VALUES (NEW.customer_id, OLD.password, NOW());
+    END IF;
+END$$
+DELIMITER ;
 
