@@ -66,11 +66,11 @@ def create_order(customerID):
         # Lock the rows in the product table
         cursor.execute("SELECT * FROM  CART")
         items = cursor.fetchall()
-
         for item in items:
+            print(item)
             productId = item[0]
             quantity = item[1]
-            price = 500
+            price = item[2]
 
             cursor.execute("SELECT MAX(SUBSTRING(OrderID, 2)) FROM ORDERS")
             last_order_id = cursor.fetchone()[0]
